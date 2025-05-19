@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscripción a carreras</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h1>Inscripción a carrera</h1>
+    <form id="formulario">
+      <input name="nombres" placeholder="Nombres" required />
+      <input name="apellidos" placeholder="Apellidos" required />
+
+      <select name="genero" required>
+        <option value="">Selecciona tu género</option>
+        <option value="Masculino">Masculino</option>
+        <option value="Femenino">Femenino</option>
+        <option value="Otro">Otro</option>
+      </select>
+
+      <input name="fechaNacimiento" type="date" required />
+      <input name="correo" type="email" placeholder="Correo electrónico" required />
+      <input name="celular" type="tel" placeholder="Celular" required />
+      <input name="pais" placeholder="País" required />
+      <input name="estado" placeholder="Estado o provincia" required />
+
+      <select name="carreraId" required>
+        <option value="">Selecciona una carrera</option>
+        <option value="5k">Carrera 5K - $100</option>
+        <option value="10k">Carrera 10K - $150</option>
+      </select>
+
+      <button type="submit">Inscribirme</button>
+    </form>
+  </main>
+
+  <script>
+    document.getElementById('formulario').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const datos = Object.fromEntries(new FormData(e.target));
+
+      const carreras = {
+        '5k': { nombre: 'Carrera 5K', precio: 100, id: '5k' },
+        '10k': { nombre: 'Carrera 10K', precio: 150, id: '10k' }
+      };
+
+      const carreraSeleccionada = carreras[datos.carreraId];
+
+      if (!carreraSeleccionada) {
+        alert('Seleccioná una carrera válida.');
+        return;
+      }
+
+      try {
+        const res = await fetch('https://inscripciones-backend.onrender.com/crear-preferencia', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...datos, carrera: carreraSeleccionada }),
+        });
+
+        const json = await res.json();
+
+        console.log('Respuesta del backend:', json);
+
+        if (!res.ok || !json.init_point) {
+          alert('Error al generar el enlace de pago. Intentá de nuevo.');
+          return;
+        }
+
+        window.location.href = json.init_point;
+      } catch (err) {
+        console.error('Error en fetch:', err);
+        alert('Error al conectar con el servidor. Verificá tu conexión.');
+      }
+    });
+  </script>
+</body>
+</html>
